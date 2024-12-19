@@ -29,8 +29,8 @@ public class AIFunctionConfiguration implements FormatProvider {
     public ChatClient chatClient(ChatClient.Builder builder, ChatMemory chatMemory) {
         return builder
                 .defaultSystem("""
-                        You are a friendly AI assistant designed to help with the management of a wellness application call Livwell.
-                        On a first response, you are to introduce yourself as 'Livwell AI' and briefly tell the users what you can help them with.
+                        You are a friendly AI assistant designed to help with the management of a wellness application call Spring-fitness.
+                        On a first response, you are to introduce yourself as 'Spring-fitness AI' and briefly tell the users what you can help them with.
                         
                         IMPORTANT - FUNCTION CALLING RULES:
                         - For ANY questions about businesses, classes, or other data, you MUST use the provided functions
@@ -41,8 +41,8 @@ public class AIFunctionConfiguration implements FormatProvider {
                         
                         Core Rules:
                         - Do not expose the business statistics to regular users. This information is reserved for business owners alone.
-                        - Livwell offer a B2B services to all wellness businesses like gym, therapy clinic, physiotherapy, hospital, general health, etc.
-                        - Your job is to answer questions about the businesses that are onboarded on livwell, fitness instructors, fitness classes, facilities, appointments available in the wellness application and packages offered by offered by each business using Livwell, recommend most attended classes, must booked appointments and facilities to users of a business
+                        - Spring-fitness offer a B2B services to all wellness businesses like gym, therapy clinic, physiotherapy, hospital, general health, etc.
+                        - Your job is to answer questions about the businesses that are onboarded on Spring-fitness, fitness instructors, fitness classes, facilities, appointments available in the wellness application and packages offered by offered by each business using Spring-fitness, recommend most attended classes, must booked appointments and facilities to users of a business
                         
                         Function Usage Examples:
                         - "List all businesses onboarded" → MUST use listBusinesses() function
@@ -58,19 +58,20 @@ public class AIFunctionConfiguration implements FormatProvider {
                         Response Rules:
                         - If you do not know the answer, politely tell the user you don't know the answer
                         - If function call fails, inform the user there was an error retrieving the data
-                        - Do not provide answer to query that is not within Livwell system
+                        - Do not provide answer to query that is not within Spring-fitness system
                         
                         IMPORTANT RULES FOR ERROR HANDLING:
                         - If a function returns an error, politely explain the error to the user.
                         - Use the exact error message returned by the function, but rephrase it for clarity if necessary.
                         - Provide guidance on how the user can correct the input.
                         
-                        """)
+                        Output formatting:
+                        """+getFormat())
                 .defaultAdvisors(
                         new MessageChatMemoryAdvisor(chatMemory, AbstractChatMemoryAdvisor.DEFAULT_CHAT_MEMORY_CONVERSATION_ID, 10),
                         new SimpleLoggerAdvisor()
                 )
-                .defaultFunctions("listBusinesses", "addNewBusiness", "addNewBusiness", "listBusinessClasses", "listBusinessClassesBetween", "listBusinessFacilities", "listBusinessAppointments", "listBusinessPackages")
+                .defaultFunctions("listBusinesses", "addNewBusiness", "addNewFitnessClass", "listBusinessClasses", "listBusinessClassesBetween", "listBusinessFacilities", "listBusinessAppointments", "listBusinessPackages", "addNewUser", "listUsers")
                 .build();
     }
 
@@ -89,7 +90,7 @@ public class AIFunctionConfiguration implements FormatProvider {
 
  // AI function call to retrieve records
     @Bean
-    @Description("List the businesses that are onboarded on Livwell. " +
+    @Description("List the businesses that are onboarded on Spring-fitness. " +
             "Returns a comprehensive list of all registered businesses. " +
             "Can be filtered or paginated based on specific requirements.")
     public Function<BusinessRequest, BusinessResponse> listBusinesses(AIDataProvider dataProvider) {
@@ -100,7 +101,7 @@ public class AIFunctionConfiguration implements FormatProvider {
         };
     }
     @Bean
-    @Description("List the classes that belong to a business on Livwell identified by businessId. " +
+    @Description("List the classes that belong to a business on Spring-fitness identified by businessId. " +
             "Returns a comprehensive list of all classes that belongs businesses. " +
             "Can be filtered or paginated based on specific requirements.")
     public Function<ClassRequest, ClassResponse> listBusinessClasses(AIDataProvider dataProvider) {
@@ -123,7 +124,7 @@ public class AIFunctionConfiguration implements FormatProvider {
     }
 
     @Bean
-    @Description("List the facilities that belong to a business on Livwell identified by businessId. " +
+    @Description("List the facilities that belong to a business on Spring-fitness identified by businessId. " +
             "Returns a comprehensive list of all facilities that belongs businesses.")
     public Function<FacilityRequest, FacilityResponse> listBusinessFacilities(AIDataProvider dataProvider) {
         return request ->{
@@ -134,7 +135,7 @@ public class AIFunctionConfiguration implements FormatProvider {
     }
 
     @Bean
-    @Description("List the appointments that belong to a business on Livwell identified by businessId. " +
+    @Description("List the appointments that belong to a business on Spring-fitness identified by businessId. " +
             "Returns a comprehensive list of all appointments that belongs businesses.")
     public Function<AppointmentRequest, AppointmentResponse> listBusinessAppointments(AIDataProvider dataProvider) {
         return request ->{
@@ -145,12 +146,23 @@ public class AIFunctionConfiguration implements FormatProvider {
     }
 
     @Bean
-    @Description("List the packages that offered by a business on Livwell identified by businessId. " +
+    @Description("List the packages that offered by a business on Spring-fitness identified by businessId. " +
             "Returns a comprehensive list of all packages that belongs businesses.")
     public Function<PackageRequest, PackageResponse> listBusinessPackages(AIDataProvider dataProvider) {
         return request ->{
             PackageResponse response = dataProvider.getPackages(request.businessId());
             System.out.println("Total packages retrieved: " + response.packages().size());
+            return response;
+        };
+    }
+
+    @Bean
+    @Description("List the users on Spring-fitness" +
+            "Returns a comprehensive list of all users that belongs to Spring-fitness.")
+    public Function<UserRequest, UserResponse> listUsers(AIDataProvider dataProvider) {
+        return request ->{
+            UserResponse response = dataProvider.getUsers();
+            System.out.println("Total users retrieved: " + response.user().size());
             return response;
         };
     }
@@ -173,9 +185,19 @@ public class AIFunctionConfiguration implements FormatProvider {
         return dataProvider::addClass;
     }
 
+    @Bean
+    @Description("Add a user to Spring-fitness." +
+            "The user must include name," +
+            "valid email address," +
+            "a 10-digit phone number," +
+            "and gender")
+    public Function<AddUserRequest, AddUserResponse> addNewUser(AIDataProvider dataProvider){
+        return dataProvider::addUser;
+    }
+
     // AI function call to add record with validation
     @Bean
-    @Description("Add a new business to the Livwell. "
+    @Description("Add a new business to the Spring-fitness. "
             + "The business must include a business name, business address, city, state, country, contact person, "
             + "plus a valid email and a 10-digit phone number" +
             " if any of the mentioned fields is not provided, kindly tell the user to provide the required field " +

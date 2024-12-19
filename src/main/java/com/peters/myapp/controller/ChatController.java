@@ -1,7 +1,5 @@
 package com.peters.myapp.controller;
 
-import com.peters.myapp.dtos.BusinessResponse;
-import com.peters.myapp.service.AIDataProvider;
 import com.peters.myapp.service.ChatService;
 import org.springframework.web.bind.annotation.*;
 

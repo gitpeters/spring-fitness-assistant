@@ -8,11 +8,12 @@ public interface AIDataProvider {
     FacilityResponse getFacilities(long businessId);
     AppointmentResponse getAppointments(long businessId);
     PackageResponse getPackages(long businessId);
+    UserResponse getUsers();
+    AddUserResponse addUser(AddUserRequest request);
     AddedClassResponse addClass(AddClassRequest request);
     AddBusinessResponse addBusiness(AddBusinessRequest request);
     AddFacilityResponse addFacility(FacilityRequest request);
     AddAppointmentResponse addAppointment(AppointmentRequest request);
     AddPackageResponse addPackage(PackageRequest request);
-
     ClassResponse getClassesBetween(ClassFilterRequest request);
 }

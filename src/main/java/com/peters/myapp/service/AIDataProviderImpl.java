@@ -15,13 +15,15 @@ public class AIDataProviderImpl implements AIDataProvider {
     private final FacilityRepository facilityRepository;
     private final AppointmentRepository appointmentRepository;
     private final PackageRepository packageRepository;
+    private final UserRepository userRepository;
 
-    public AIDataProviderImpl(BusinessRepository businessRepository, ClassRepository classRepository, FacilityRepository facilityRepository, AppointmentRepository appointmentRepository, PackageRepository packageRepository) {
+    public AIDataProviderImpl(BusinessRepository businessRepository, ClassRepository classRepository, FacilityRepository facilityRepository, AppointmentRepository appointmentRepository, PackageRepository packageRepository, UserRepository userRepository) {
         this.businessRepository = businessRepository;
         this.classRepository = classRepository;
         this.facilityRepository = facilityRepository;
         this.appointmentRepository = appointmentRepository;
         this.packageRepository = packageRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -65,6 +67,19 @@ public class AIDataProviderImpl implements AIDataProvider {
     public PackageResponse getPackages(long businessId) {
         List<Package> packages = packageRepository.findAllByBusinessId(businessId);
         return new PackageResponse(packages);
+    }
+
+    @Override
+    public UserResponse getUsers() {
+        List<User> users = userRepository.findAll();
+        return new UserResponse(users);
+    }
+
+    @Override
+    public AddUserResponse addUser(AddUserRequest request) {
+        User user = request.user();
+        userRepository.save(user);
+        return new AddUserResponse(user);
     }
 
     @Override
