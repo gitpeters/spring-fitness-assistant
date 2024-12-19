@@ -71,7 +71,10 @@ public class AIFunctionConfiguration implements FormatProvider {
                         new MessageChatMemoryAdvisor(chatMemory, AbstractChatMemoryAdvisor.DEFAULT_CHAT_MEMORY_CONVERSATION_ID, 10),
                         new SimpleLoggerAdvisor()
                 )
-                .defaultFunctions("listBusinesses", "addNewBusiness", "addNewFitnessClass", "listBusinessClasses", "listBusinessClassesBetween", "listBusinessFacilities", "listBusinessAppointments", "listBusinessPackages", "addNewUser", "listUsers")
+                .defaultFunctions("listBusinesses", "addNewBusiness", "addNewFitnessClass",
+                        "listBusinessClasses", "listBusinessClassesBetween", "listBusinessFacilities",
+                        "listBusinessAppointments", "listBusinessPackages", "addNewUser", "listUsers", "addClassToUserBooking",
+                        "getClassByName", "getUserByName", "listUserBookings")
                 .build();
     }
 
@@ -108,6 +111,26 @@ public class AIFunctionConfiguration implements FormatProvider {
         return request ->{
             ClassResponse response = dataProvider.getClasses(request.businessId());
             System.out.println("Total classes retrieved: " + response.fitnessClasses().size());
+            return response;
+        };
+    }
+
+    @Bean
+    @Description("Fetch a fitness class by name")
+    public Function<EntityRequest, AddedClassResponse> getClassByName(AIDataProvider dataProvider) {
+        return request ->{
+            AddedClassResponse response = dataProvider.getClassByName(request.name());
+            System.out.println("Class retrieved: " + response.fitnessClass().getName());
+            return response;
+        };
+    }
+
+    @Bean
+    @Description("Fetch a user class by name")
+    public Function<EntityRequest, AddUserResponse> getUserByName(AIDataProvider dataProvider) {
+        return request ->{
+            AddUserResponse response = dataProvider.getUserByName(request.name());
+            System.out.println("User retrieved: " + response.user().getName());
             return response;
         };
     }
@@ -154,6 +177,25 @@ public class AIFunctionConfiguration implements FormatProvider {
             System.out.println("Total packages retrieved: " + response.packages().size());
             return response;
         };
+    }
+
+    @Bean
+    @Description("List bookings in Spring-fitness identified by userId. " +
+            "Returns a comprehensive list of all booking that belongs user.")
+    public Function<BookingRequest, BookingResponse> listUserBookings(AIDataProvider dataProvider) {
+        return request ->{
+            BookingResponse response = dataProvider.getBookings(request);
+            System.out.println("Total bookings retrieved: " + response.bookings().size());
+            return response;
+        };
+    }
+
+    @Bean
+    @Description("Book fitness class identified by classId on behalf of a user identified by userId." +
+            " - Returns booking confirmation with booking details" +
+            " Use this function when a user wants to book/register for a specific fitness class.")
+    public Function<AddBookingRequest, AddBookingResponse> addClassToUserBooking(AIDataProvider dataProvider) {
+        return request -> dataProvider.addClassToUserBooking(request.userId(), request.classId());
     }
 
     @Bean

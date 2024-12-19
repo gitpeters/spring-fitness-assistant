@@ -16,14 +16,16 @@ public class AIDataProviderImpl implements AIDataProvider {
     private final AppointmentRepository appointmentRepository;
     private final PackageRepository packageRepository;
     private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
 
-    public AIDataProviderImpl(BusinessRepository businessRepository, ClassRepository classRepository, FacilityRepository facilityRepository, AppointmentRepository appointmentRepository, PackageRepository packageRepository, UserRepository userRepository) {
+    public AIDataProviderImpl(BusinessRepository businessRepository, ClassRepository classRepository, FacilityRepository facilityRepository, AppointmentRepository appointmentRepository, PackageRepository packageRepository, UserRepository userRepository, BookingRepository bookingRepository) {
         this.businessRepository = businessRepository;
         this.classRepository = classRepository;
         this.facilityRepository = facilityRepository;
         this.appointmentRepository = appointmentRepository;
         this.packageRepository = packageRepository;
         this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     @Override
@@ -125,43 +127,42 @@ public class AIDataProviderImpl implements AIDataProvider {
     }
 
     @Override
+    public AddBookingResponse addClassToUserBooking(long userId, long classId) {
+        User user = userRepository.findById(userId).orElse(null);
+        FitnessClass fitnessClass = classRepository.findById(classId).orElse(null);
+        if(user!=null && fitnessClass!=null) {
+            Booking booking = new Booking();
+            booking.setUser(user);
+            booking.setFitnessClass(fitnessClass);
+            bookingRepository.save(booking);
+            return new AddBookingResponse(booking);
+        }
+        return null;
+    }
+
+    @Override
+    public BookingResponse getBookings(BookingRequest request) {
+        List<Booking> bookings = bookingRepository.findAllByUserId(request.userId());
+        return new BookingResponse(bookings);
+    }
+
+    @Override
+    public AddUserResponse getUserByName(String name) {
+        User user = userRepository.findFirstByName(name.trim()).orElse(null);
+        return new AddUserResponse(user);
+    }
+
+    @Override
+    public AddedClassResponse getClassByName(String name) {
+        FitnessClass fitnessClass = classRepository.findFirstByName(name.trim()).orElse(null);
+        return new AddedClassResponse(fitnessClass, fitnessClass!=null ? fitnessClass.getBusiness() : null);
+    }
+
+    @Override
     public AddBusinessResponse addBusiness(AddBusinessRequest request) {
-//        validateRequest(request);
         Business business = mapTo(request);
         businessRepository.save(business);
         return new AddBusinessResponse(business);
-    }
-
-    private void validateRequest(AddBusinessRequest request) {
-        if (request.name() == null || request.name().length() < 2 || request.name().length() > 50) {
-            throw new IllegalArgumentException("Business name must be unique and 2-50 characters long.");
-        }
-
-        // Validate address
-        if (request.address() == null || request.address().isBlank()) {
-            throw new IllegalArgumentException("Address is required.");
-        }
-
-        // Validate contact person
-        if (request.contactPerson() == null || !request.contactPerson().trim().contains(" ")) {
-            throw new IllegalArgumentException("Contact Person must include a first and last name.");
-        }
-
-        // Validate email
-        if (request.email() == null || !request.email().matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")) {
-            throw new IllegalArgumentException("Invalid email format.");
-        }
-
-        // Validate phone
-        if (request.phone() == null || !request.phone().matches("\\d{10}")) {
-            throw new IllegalArgumentException("Phone number must be exactly 10 digits.");
-        }
-
-        // Perform duplicate name check
-        if (businessRepository.existsByName(request.name().trim())) {
-            throw new IllegalArgumentException("Business name already exists.");
-        }
-
     }
 
     private Business mapTo(AddBusinessRequest request) {

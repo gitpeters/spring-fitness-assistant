@@ -6,9 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface ClassRepository extends JpaRepository<FitnessClass, Long> {
     List<FitnessClass> findAllByBusinessId(Long businessId);
     List<FitnessClass> findAllByStartDateBetween(LocalDate startDate, LocalDate endDate);
     List<FitnessClass> findAllByPriceBetween(BigDecimal lower, BigDecimal higher);
+    Optional<FitnessClass> findFirstByName(String name);
 }

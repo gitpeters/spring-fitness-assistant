@@ -16,4 +16,8 @@ public interface AIDataProvider {
     AddAppointmentResponse addAppointment(AppointmentRequest request);
     AddPackageResponse addPackage(PackageRequest request);
     ClassResponse getClassesBetween(ClassFilterRequest request);
+    AddBookingResponse addClassToUserBooking(long userId, long classId);
+    AddUserResponse getUserByName(String name);
+    AddedClassResponse getClassByName(String name);
+    BookingResponse getBookings(BookingRequest request);
 }
