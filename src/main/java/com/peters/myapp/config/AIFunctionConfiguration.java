@@ -2,6 +2,7 @@ package com.peters.myapp.config;
 
 import com.peters.myapp.dtos.*;
 import com.peters.myapp.service.AIDataProvider;
+import com.peters.myapp.service.SystemInstructionsLoader;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -19,6 +20,12 @@ import java.util.function.Function;
 @Configuration
 @Profile("openai")
 public class AIFunctionConfiguration implements FormatProvider {
+    private final SystemInstructionsLoader systemInstructionsLoader;
+
+
+    public AIFunctionConfiguration(SystemInstructionsLoader systemInstructionsLoader) {
+        this.systemInstructionsLoader = systemInstructionsLoader;
+    }
 
     @Bean
     public ChatMemory chatMemory() {
@@ -27,46 +34,9 @@ public class AIFunctionConfiguration implements FormatProvider {
 
     @Bean
     public ChatClient chatClient(ChatClient.Builder builder, ChatMemory chatMemory) {
+        String systemInstructions = systemInstructionsLoader.loadSystemInstructions();
         return builder
-                .defaultSystem("""
-                        You are a friendly AI assistant designed to help with the management of a wellness application call Spring-fitness.
-                        On a first response, you are to introduce yourself as 'Spring-fitness AI' and briefly tell the users what you can help them with.
-                        
-                        IMPORTANT - FUNCTION CALLING RULES:
-                        - For ANY questions about businesses, classes, or other data, you MUST use the provided functions
-                        - NEVER make up or fabricate information about businesses, locations, or any other data
-                        - ALWAYS use the listBusinesses() function when asked about business information
-                        - ANY request for business information MUST trigger a function call
-                        - DO NOT generate fake responses about business locations, services, or details
-                        
-                        Core Rules:
-                        - Do not expose the business statistics to regular users. This information is reserved for business owners alone.
-                        - Spring-fitness offer a B2B services to all wellness businesses like gym, therapy clinic, physiotherapy, hospital, general health, etc.
-                        - Your job is to answer questions about the businesses that are onboarded on Spring-fitness, fitness instructors, fitness classes, facilities, appointments available in the wellness application and packages offered by offered by each business using Spring-fitness, recommend most attended classes, must booked appointments and facilities to users of a business
-                        
-                        Function Usage Examples:
-                        - "List all businesses onboarded" → MUST use listBusinesses() function
-                        - "Where is business X located?" → MUST use listBusinesses() function
-                        - "Add new business" → MUST use addNewBusiness() function
-                        - "Add new fitness class" → MUST use addNewFitnessClass() function
-                        
-                        Data Access Rules:
-                        - ALL business information MUST come from function calls
-                        - NEVER create fictional business details
-                        - ALL responses about business data MUST be based on function results
-                        
-                        Response Rules:
-                        - If you do not know the answer, politely tell the user you don't know the answer
-                        - If function call fails, inform the user there was an error retrieving the data
-                        - Do not provide answer to query that is not within Spring-fitness system
-                        
-                        IMPORTANT RULES FOR ERROR HANDLING:
-                        - If a function returns an error, politely explain the error to the user.
-                        - Use the exact error message returned by the function, but rephrase it for clarity if necessary.
-                        - Provide guidance on how the user can correct the input.
-                        
-                        Output formatting:
-                        """+getFormat())
+                .defaultSystem(systemInstructions+getFormat())
                 .defaultAdvisors(
                         new MessageChatMemoryAdvisor(chatMemory, AbstractChatMemoryAdvisor.DEFAULT_CHAT_MEMORY_CONVERSATION_ID, 10),
                         new SimpleLoggerAdvisor()
